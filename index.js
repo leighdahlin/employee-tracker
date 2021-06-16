@@ -1,5 +1,10 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
+const cTable = require('console.table')
+const addDepartment = require('./lib/department.js');
+const addRole = require('./lib/role.js');
+const addEmployee = require('./lib/employee.js');
+const { star } = require('cli-spinners');
 
 // create the connection information for the sql database
 const connection = mysql.createConnection({
@@ -22,7 +27,7 @@ const start = ()=> {
       name: 'firstSelection',
       type: 'list',
       message: 'What would you like to do?',
-      choices: ['Add department, role or employee', 'View department, role or employee', 'Update employee role'],
+      choices: ['Add department, role or employee', 'View department, role or employee', 'Update employee role', 'Exit'],
     })
     .then((answer) => {
       // based on their answer, either call the bid or the post functions
@@ -37,6 +42,8 @@ const start = ()=> {
             case 'Update employee role':
                 update()
                 break;
+            case 'Exit':
+                connection.end();
         }
     });
 }
@@ -49,17 +56,20 @@ const add = ()=> {
       message: 'What would you like to add?',
       choices: ['Department', 'Role', 'Employee'],
     })
-    .then((answer) => {
+    .then(async(answer) => {
       // based on their answer, either call the bid or the post functions
         switch(answer.addSelection){
             case 'Department':
-                console.log(answer)
+                await addDepartment();
+                await start()
                 break;
             case 'Role':
-                console.log(answer)
+                await addRole();
+                await start();
                 break;
             case 'Employee':
-                console.log(answer)
+                await addEmployee();
+                await start();
                 break;
         }
     });};
@@ -76,20 +86,62 @@ const view = ()=> {
       // based on their answer, either call the bid or the post functions
         switch(answer.viewSelection){
             case 'Department':
-                console.log(answer)
+              connection.query('SELECT * FROM department', async(err,res) => {
+                if (err) throw err;
+                await console.table('Departments',res)
+                await start()
+            })
+                // await start()
                 break;
             case 'Role':
-                console.log(answer)
+                connection.query('SELECT * FROM role', async(err,res) => {
+                  if (err) throw err;
+                  await console.table('Roles',res);
+                  await start();
+              })
+                
                 break;
             case 'Employee':
-                console.log(answer)
-                break;;
+                connection.query('SELECT * FROM employee', async(err,res) => {
+                  if (err) throw err;
+                  await console.table('Employees',res)
+                  await start();
+              })
                 break;
         }
     });};
 
 const update = ()=> {
-    console.log("Updating!")
+  connection.query('SELECT * FROM employee', async (err,results) => {
+    if (err) throw err;
+    await inquirer
+    .prompt({
+      name: 'id',
+      type: 'input',
+      message: 'What is the id for the employee you want to update?',
+    })
+    .then(async(answer)=> {
+      let employee;
+      await results.forEach((ee)=> {
+        if (ee.id === parseInt(answer.id)){
+          employee = ee;
+          console.table([employee])
+        }
+      });
+    })
+    await inquirer.prompt({
+      name:'correct',
+      type: 'confirm',
+      message: 'Is this the employee you want to update?'
+    })
+    .then((answer) => {
+      console.log(answer)
+    })
+  })
+  
+    // const query = connection.query(
+    //   'UPDATE employee SET ? WHERE ?'
+    // )
 };
 
 
@@ -100,3 +152,4 @@ connection.connect((err) => {
   });
 
 //NEED TO ADD CONNECTION.END()!!!
+//add function with inquirer prompt to go back to start or exit

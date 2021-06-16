@@ -1,11 +1,15 @@
-INSERT INTO people (name, has_pet, pet_name, pet_age)
+INSERT INTO department (name)
+VALUES ("");
+
+INSERT INTO department (name)
+VALUES ("");
+
+INSERT INTO department (name)
+VALUES ("");
+
+INSERT INTO role (title, salary, department_id)
 VALUES ("Ahmed", true, "Rockington", 100);
 
-INSERT INTO people (name, has_pet, pet_name, pet_age)
+INSERT INTO employee (first_name,last_name,role_id,manager_id)
 VALUES ("Ahmed", true, "Rockington", 100);
 
-INSERT INTO people (name, has_pet, pet_name, pet_age)
-VALUES ("Jacob",true,"Misty",10);
-
-INSERT INTO people (name, has_pet)
-VALUES ("Peter", false);

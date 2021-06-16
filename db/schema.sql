@@ -9,7 +9,7 @@ USE company;
 -- Creates the table "department" within company --
 CREATE TABLE department (
   id INTEGER NOT NULL AUTO_INCREMENT,
-  name VARCHAR(30) NOT NULL
+  name VARCHAR(30) NOT NULL,
     PRIMARY KEY (id)
 
 );
@@ -17,8 +17,9 @@ CREATE TABLE department (
 CREATE TABLE role (
   id INTEGER NOT NULL AUTO_INCREMENT,
   title VARCHAR(30),
-  salary DECIMAL
+  salary DECIMAL,
   department_id INTEGER NOT NULL,
+  FOREIGN KEY(department_id) REFERENCES department(id),
   PRIMARY KEY (id)
 
 );
@@ -28,6 +29,8 @@ CREATE TABLE employee (
   first_name VARCHAR(30) NOT NULL,
   last_name VARCHAR(30) NOT NULL,
   role_id INTEGER NOT NULL,
-  manager_id INTEGER
+  manager_id INTEGER,
+  FOREIGN KEY(role_id) REFERENCES role(id),
+  FOREIGN KEY(manager_id) REFERENCES role(id),
   PRIMARY KEY (id)
 );
