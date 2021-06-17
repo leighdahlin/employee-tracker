@@ -5,6 +5,7 @@ const addDepartment = require('./lib/department.js');
 const addRole = require('./lib/role.js');
 const addEmployee = require('./lib/employee.js');
 const { star } = require('cli-spinners');
+const { forEach } = require('lodash');
 
 // create the connection information for the sql database
 const connection = mysql.createConnection({
@@ -112,6 +113,9 @@ const view = ()=> {
     });};
 
 const update = ()=> {
+  let employee;
+  let roleId;
+
   connection.query('SELECT * FROM employee', async (err,results) => {
     if (err) throw err;
     await inquirer
@@ -121,11 +125,11 @@ const update = ()=> {
       message: 'What is the id for the employee you want to update?',
     })
     .then(async(answer)=> {
-      let employee;
       await results.forEach((ee)=> {
         if (ee.id === parseInt(answer.id)){
           employee = ee;
           console.table([employee])
+          console.log(employee)
         }
       });
     })
@@ -135,13 +139,56 @@ const update = ()=> {
       message: 'Is this the employee you want to update?'
     })
     .then((answer) => {
-      console.log(answer)
+      if(answer.correct){
+        connection.query('SELECT title FROM role', async (err,res)=> {
+          if(err) throw err;
+          let roles = []
+          await res.forEach((item) => {
+            roles.push(item.title)
+          })
+          await roles.push('Add new role (if not listed above)')
+          await inquirer.prompt({
+            name: 'role', //need rolde id, not role name
+            type: 'list',
+            message: 'Choose the employee\'s new role',
+            choices: roles
+        })
+        .then(async(answer) => {
+          await connection.query('SELECT id FROM role WHERE title = ?',
+            [answer.role],
+           async (err,res)=> {
+            if(err) throw err
+            roleId = parseInt(res[0].id);
+          await connection.query(
+            'UPDATE employee SET ? WHERE ?',
+            [
+              {
+                role_id: roleId
+              },
+              {
+                id: employee.id
+              }
+            ],
+            (err,res)=> {
+              if(err)throw err;
+              console.log(`${res.affectedRows} employees updated!`);
+              // start();
+            }
+          )
+            
+          });
+
+        })
+        
+        })
+      }
+      else{
+        update();
+      }
     })
   })
   
-    // const query = connection.query(
-    //   'UPDATE employee SET ? WHERE ?'
-    // )
+    
 };
 
 
