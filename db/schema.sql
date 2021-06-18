@@ -1,20 +1,20 @@
 -- Drops the company if it exists currently --
-DROP DATABASE IF EXISTS company;
+DROP DATABASE IF EXISTS dunder_mifflin;
 -- Creates the "company" database --
-CREATE DATABASE company;
+CREATE DATABASE dunder_mifflin;
 
 -- Makes it so all of the following code will affect company --
-USE company;
+USE dunder_mifflin;
 
 -- Creates the table "department" within company --
-CREATE TABLE department (
+CREATE TABLE departments (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(30) NOT NULL,
     PRIMARY KEY (id)
 
 );
 
-CREATE TABLE role (
+CREATE TABLE roles (
   id INTEGER NOT NULL AUTO_INCREMENT,
   title VARCHAR(30),
   salary DECIMAL,
@@ -24,7 +24,7 @@ CREATE TABLE role (
 
 );
 
-CREATE TABLE employee (
+CREATE TABLE employees (
   id INTEGER NOT NULL AUTO_INCREMENT,
   first_name VARCHAR(30) NOT NULL,
   last_name VARCHAR(30) NOT NULL,

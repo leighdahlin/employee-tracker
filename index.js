@@ -19,7 +19,7 @@ const connection = mysql.createConnection({
 
   // Your password
   password: 'password',
-  database: 'company',
+  database: 'dunder_mifflin',
 });
 
 const start = ()=> {
@@ -123,13 +123,19 @@ const update = ()=> {
       name: 'id',
       type: 'input',
       message: 'What is the id for the employee you want to update?',
+      validate (input) {
+        if(input==="") {
+            return 'Please enter the id for the employee';
+        } else {
+            return true;
+        }
+    },
     })
     .then(async(answer)=> {
       await results.forEach((ee)=> {
         if (ee.id === parseInt(answer.id)){
           employee = ee;
           console.table([employee])
-          console.log(employee)
         }
       });
     })
@@ -146,13 +152,16 @@ const update = ()=> {
           await res.forEach((item) => {
             roles.push(item.title)
           })
-          await roles.push('Add new role (if not listed above)')
-          await inquirer.prompt({
-            name: 'role', //need rolde id, not role name
+          //FEATURE TO ADD:
+          // await roles.push('Add new role (if not listed above)')
+          await inquirer.prompt([
+            {
+            name: 'role', 
             type: 'list',
             message: 'Choose the employee\'s new role',
             choices: roles
-        })
+        },
+        ])
         .then(async(answer) => {
           await connection.query('SELECT id FROM role WHERE title = ?',
             [answer.role],
@@ -172,7 +181,7 @@ const update = ()=> {
             (err,res)=> {
               if(err)throw err;
               console.log(`${res.affectedRows} employees updated!`);
-              // start();
+              start();
             }
           )
             
