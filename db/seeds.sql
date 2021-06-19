@@ -52,7 +52,7 @@ VALUES ("Warehouse Staff", 18000, 3);
 
 
 INSERT INTO employee (first_name,last_name,role_id,manager_id)
-VALUES ("Michael","Scott",1,1);
+VALUES ("Michael","Scott",1,null);
 
 INSERT INTO employee (first_name,last_name,role_id,manager_id)
 VALUES ("Dwight","Schrute",2,1);
@@ -67,7 +67,7 @@ INSERT INTO employee (first_name,last_name,role_id,manager_id)
 VALUES ("Stanley","Hudson",3,1);
 
 INSERT INTO employee (first_name,last_name,role_id,manager_id)
-VALUES ("Darryl","Philbin",9,2);
+VALUES ("Darryl","Philbin",9,null);
 
 INSERT INTO employee (first_name,last_name,role_id,manager_id)
 VALUES ("Pam","Beasley",4,1);

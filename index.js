@@ -4,8 +4,7 @@ const cTable = require('console.table')
 const addDepartment = require('./lib/department.js');
 const addRole = require('./lib/role.js');
 const addEmployee = require('./lib/employee.js');
-// const { star } = require('cli-spinners');
-// const { forEach } = require('lodash');
+const chalk = require('chalk')
 let managers = []
 
 // create the connection information for the sql database
@@ -89,16 +88,16 @@ const view = ()=> {
       getManagers();
         switch(answer.viewSelection){
             case 'Department':
-              connection.query('SELECT * FROM department', async(err,res) => {
+              connection.query('SELECT id AS Id, name AS Name FROM department', async(err,res) => {
                 if (err) throw err;
-                await console.table('Departments',res)
+                await console.table(chalk.black.bold.bgCyan('  Departments  '),res)
                 await start()
             })
                 break;
             case 'Role':
                 connection.query('SELECT * FROM role', async(err,res) => {
                   if (err) throw err;
-                  await console.table('Roles',res);
+                  await console.table(chalk.black.bold.bgCyan('  Roles  '),res);
                   await start();
               })
                 
@@ -116,14 +115,14 @@ const view = ()=> {
                     case 'View Employees by Department':
                       connection.query('SELECT department.id,name,first_name,last_name,title FROM employee INNER JOIN role ON (employee.role_id = role.id) INNER JOIN department ON (role.department_id = department.id)                      ', async(err,res) => {
                         if (err) throw err;
-                        await console.table('Employees by Department',res)
+                        await console.table(chalk.black.bold.bgCyan('  Employees by Department  '),res)
                         await start();
                     })
                       break;
                     case 'View Employees by Id':
                       connection.query('SELECT * FROM employee', async(err,res) => {
                         if (err) throw err;
-                        await console.table('Employees by Id',res)
+                        await console.table(chalk.black.bold.bgCyan('  Employees by Id  '),res)
                         await start();
                     })
                       break;
@@ -144,7 +143,7 @@ const view = ()=> {
                         connection.query('SELECT title,first_name,last_name FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE manager_id = ?',[id[0]],
                          async(err,res) => {
                           if (err) throw err;
-                          await console.table(`${answer.manager} Employees`,res)
+                          await console.table(chalk.black.bold.bgCyan(`${answer.manager} Employees`),res)
                           await start();
                       })
                       })
@@ -249,6 +248,7 @@ const update = ()=> {
 };
 
 const getManagers = async () => {
+  managers = [];
   await connection.query('SELECT employee.id,first_name,last_name,name FROM employee INNER JOIN role ON (employee.role_id = role.id) INNER JOIN department ON (role.department_id = department.id)', async (err,res) => {
       if(err) throw err
       await res.forEach(async (item) => {

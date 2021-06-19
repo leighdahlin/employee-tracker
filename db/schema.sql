@@ -7,16 +7,16 @@ CREATE DATABASE dunder_mifflin;
 USE dunder_mifflin;
 
 -- Creates the table "department" within company --
-CREATE TABLE departments (
+CREATE TABLE department (
   id INTEGER NOT NULL AUTO_INCREMENT,
   name VARCHAR(30) NOT NULL,
     PRIMARY KEY (id)
 
 );
 
-CREATE TABLE roles (
+CREATE TABLE role (
   id INTEGER NOT NULL AUTO_INCREMENT,
-  title VARCHAR(30),
+  title VARCHAR(50),
   salary DECIMAL,
   department_id INTEGER NOT NULL,
   FOREIGN KEY(department_id) REFERENCES department(id),
@@ -24,7 +24,7 @@ CREATE TABLE roles (
 
 );
 
-CREATE TABLE employees (
+CREATE TABLE employee (
   id INTEGER NOT NULL AUTO_INCREMENT,
   first_name VARCHAR(30) NOT NULL,
   last_name VARCHAR(30) NOT NULL,
