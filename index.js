@@ -4,8 +4,9 @@ const cTable = require('console.table')
 const addDepartment = require('./lib/department.js');
 const addRole = require('./lib/role.js');
 const addEmployee = require('./lib/employee.js');
-const { star } = require('cli-spinners');
-const { forEach } = require('lodash');
+// const { star } = require('cli-spinners');
+// const { forEach } = require('lodash');
+let managers = []
 
 // create the connection information for the sql database
 const connection = mysql.createConnection({
@@ -84,7 +85,8 @@ const view = ()=> {
       choices: ['Department', 'Role', 'Employee'],
     })
     .then((answer) => {
-      // based on their answer, either call the bid or the post functions
+      //inputs managers into manager array in case user wants to view by manager, if put later, not enough time to execute before prompt
+      getManagers();
         switch(answer.viewSelection){
             case 'Department':
               connection.query('SELECT * FROM department', async(err,res) => {
@@ -92,7 +94,6 @@ const view = ()=> {
                 await console.table('Departments',res)
                 await start()
             })
-                // await start()
                 break;
             case 'Role':
                 connection.query('SELECT * FROM role', async(err,res) => {
@@ -103,11 +104,54 @@ const view = ()=> {
                 
                 break;
             case 'Employee':
-                connection.query('SELECT * FROM employee', async(err,res) => {
-                  if (err) throw err;
-                  await console.table('Employees',res)
-                  await start();
-              })
+                inquirer.prompt([
+                  {
+                    name: 'chooseView',
+                    type: 'list',
+                    message: 'Choose below',
+                    choices: ['View Employees by Department','View Employees by Id', 'View employees by Manager']
+                  }
+                ]).then(async(answer) => {
+                  switch(answer.chooseView){
+                    case 'View Employees by Department':
+                      connection.query('SELECT department.id,name,first_name,last_name,title FROM employee INNER JOIN role ON (employee.role_id = role.id) INNER JOIN department ON (role.department_id = department.id)                      ', async(err,res) => {
+                        if (err) throw err;
+                        await console.table('Employees by Department',res)
+                        await start();
+                    })
+                      break;
+                    case 'View Employees by Id':
+                      connection.query('SELECT * FROM employee', async(err,res) => {
+                        if (err) throw err;
+                        await console.table('Employees by Id',res)
+                        await start();
+                    })
+                      break;
+                    case 'View employees by Manager':
+
+                      inquirer.prompt([
+                        {
+                          name: 'manager',
+                          type: 'list',
+                          message: 'Choose manager',
+                          choices: managers,
+                        }
+                      ]).then((answer) => {
+                        console.log(answer)
+                        let id = answer.manager
+                        // id.split(" ")
+                        
+                        connection.query('SELECT title,first_name,last_name FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE manager_id = ?',[id[0]],
+                         async(err,res) => {
+                          if (err) throw err;
+                          await console.table(`${answer.manager} Employees`,res)
+                          await start();
+                      })
+                      })
+                      
+                      break;
+                  }
+                })
                 break;
         }
     });};
@@ -119,18 +163,20 @@ const update = ()=> {
   connection.query('SELECT * FROM employee', async (err,results) => {
     if (err) throw err;
     await inquirer
-    .prompt({
-      name: 'id',
-      type: 'input',
-      message: 'What is the id for the employee you want to update?',
-      validate (input) {
-        if(input==="") {
-            return 'Please enter the id for the employee';
-        } else {
-            return true;
-        }
-    },
-    })
+    .prompt([
+      {
+        name: 'id',
+        type: 'input',
+        message: 'What is the id for the employee you want to update?',
+        validate (input) {
+          if(input==="") {
+              return 'Please enter the id for the employee';
+          } else {
+              return true;
+          }
+        },
+    }
+    ])
     .then(async(answer)=> {
       await results.forEach((ee)=> {
         if (ee.id === parseInt(answer.id)){
@@ -139,11 +185,13 @@ const update = ()=> {
         }
       });
     })
-    await inquirer.prompt({
+    await inquirer.prompt([
+      {
       name:'correct',
       type: 'confirm',
       message: 'Is this the employee you want to update?'
-    })
+    }
+    ])
     .then((answer) => {
       if(answer.correct){
         connection.query('SELECT title FROM role', async (err,res)=> {
@@ -200,6 +248,18 @@ const update = ()=> {
     
 };
 
+const getManagers = async () => {
+  await connection.query('SELECT employee.id,first_name,last_name,name FROM employee INNER JOIN role ON (employee.role_id = role.id) INNER JOIN department ON (role.department_id = department.id)', async (err,res) => {
+      if(err) throw err
+      await res.forEach(async (item) => {
+          if(item.name === "Management"){
+             managers.push(parseInt(item.id) + " - " + item.first_name + " " + item.last_name)
+          }
+          
+      })
+  })
+  return managers;
+}
 
 connection.connect((err) => {
     if (err) throw err;
