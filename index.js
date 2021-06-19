@@ -35,7 +35,6 @@ const start = ()=> {
       // based on their answer, takes the user to a new set of prompts or ends the connection
         switch(answer.firstSelection){
             case 'Add department, role or employee':
-                console.log(answer)
                 add()
                 break;
             case 'View department, role or employee':
@@ -145,7 +144,6 @@ const view = ()=> {
                           choices: managers,
                         }
                       ]).then((answer) => {
-                        console.log(answer)
                         let id = answer.manager
                         
                         //queries MySql using an inner join for the employee and role table to display all employees for a certain manager
@@ -248,7 +246,7 @@ const update = ()=> {
                   ],
                   (err,res)=> {
                     if(err)throw err;
-                    console.log(`${res.affectedRows} employees updated!`);
+                    console.log(chalk.magenta(`${res.affectedRows} employees updated!`));
                     start();
                   }
                 )
