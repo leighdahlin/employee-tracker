@@ -22,6 +22,7 @@ const connection = mysql.createConnection({
   database: 'dunder_mifflin',
 });
 
+//function to kick off the inquirer prompts
 const start = ()=> {
     inquirer
     .prompt({
@@ -31,7 +32,7 @@ const start = ()=> {
       choices: ['Add department, role or employee', 'View department, role or employee', 'Update employee role', 'Exit'],
     })
     .then((answer) => {
-      // based on their answer, either call the bid or the post functions
+      // based on their answer, takes the user to a new set of prompts or ends the connection
         switch(answer.firstSelection){
             case 'Add department, role or employee':
                 console.log(answer)
@@ -49,7 +50,9 @@ const start = ()=> {
     });
 }
 
+//prompts to add a dep, role or ee
 const add = ()=> {
+    //the user selects what they'd like to add
     inquirer
     .prompt({
       name: 'addSelection',
@@ -58,7 +61,7 @@ const add = ()=> {
       choices: ['Department', 'Role', 'Employee'],
     })
     .then(async(answer) => {
-      // based on their answer, either call the bid or the post functions
+      // based on their answer, the imported add functions are run, then the user is taken back to the start menu
         switch(answer.addSelection){
             case 'Department':
                 await addDepartment();
@@ -74,7 +77,7 @@ const add = ()=> {
                 break;
         }
     });};
-
+//prompts to view a dep, role or ee
 const view = ()=> {
     inquirer
     .prompt({
@@ -88,6 +91,7 @@ const view = ()=> {
       getManagers();
         switch(answer.viewSelection){
             case 'Department':
+              //querires MySql to display all departments
               connection.query('SELECT id AS Id, name AS Name FROM department', async(err,res) => {
                 if (err) throw err;
                 await console.table(chalk.black.bold.bgCyan('  Departments  '),res)
@@ -95,7 +99,8 @@ const view = ()=> {
             })
                 break;
             case 'Role':
-                connection.query('SELECT * FROM role', async(err,res) => {
+                //queries MySql to display all roles
+                connection.query('SELECT id AS Id, title AS Title, salary AS Salary, department_id AS Department_Id FROM role', async(err,res) => {
                   if (err) throw err;
                   await console.table(chalk.black.bold.bgCyan('  Roles  '),res);
                   await start();
@@ -103,6 +108,7 @@ const view = ()=> {
                 
                 break;
             case 'Employee':
+                //prompts the user how they'd like to view employee data
                 inquirer.prompt([
                   {
                     name: 'chooseView',
@@ -112,6 +118,7 @@ const view = ()=> {
                   }
                 ]).then(async(answer) => {
                   switch(answer.chooseView){
+                    //queries MySql using a triple inner join to view employees by department
                     case 'View Employees by Department':
                       connection.query('SELECT department.id,name,first_name,last_name,title FROM employee INNER JOIN role ON (employee.role_id = role.id) INNER JOIN department ON (role.department_id = department.id)                      ', async(err,res) => {
                         if (err) throw err;
@@ -119,6 +126,7 @@ const view = ()=> {
                         await start();
                     })
                       break;
+                    //queries MySql to view all employees in employee table
                     case 'View Employees by Id':
                       connection.query('SELECT * FROM employee', async(err,res) => {
                         if (err) throw err;
@@ -126,6 +134,7 @@ const view = ()=> {
                         await start();
                     })
                       break;
+                    //queries MySql to view all employees by manager, first by getting a list of managers and displaying them as choices
                     case 'View employees by Manager':
 
                       inquirer.prompt([
@@ -138,8 +147,8 @@ const view = ()=> {
                       ]).then((answer) => {
                         console.log(answer)
                         let id = answer.manager
-                        // id.split(" ")
                         
+                        //queries MySql using an inner join for the employee and role table to display all employees for a certain manager
                         connection.query('SELECT title,first_name,last_name FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE manager_id = ?',[id[0]],
                          async(err,res) => {
                           if (err) throw err;
@@ -154,14 +163,14 @@ const view = ()=> {
                 break;
         }
     });};
-
+//prompts to update an ee class
 const update = ()=> {
   let employee;
   let roleId;
-
-  connection.query('SELECT * FROM employee', async (err,results) => {
-    if (err) throw err;
-    await inquirer
+  //queries MySql for all employees
+  
+    //prompts the user for the employee's id who they want to update
+    inquirer
     .prompt([
       {
         name: 'id',
@@ -177,74 +186,93 @@ const update = ()=> {
     }
     ])
     .then(async(answer)=> {
-      await results.forEach((ee)=> {
-        if (ee.id === parseInt(answer.id)){
-          employee = ee;
-          console.table([employee])
-        }
-      });
-    })
-    await inquirer.prompt([
-      {
-      name:'correct',
-      type: 'confirm',
-      message: 'Is this the employee you want to update?'
-    }
-    ])
-    .then((answer) => {
-      if(answer.correct){
-        connection.query('SELECT title FROM role', async (err,res)=> {
-          if(err) throw err;
-          let roles = []
-          await res.forEach((item) => {
-            roles.push(item.title)
-          })
-          //FEATURE TO ADD:
-          // await roles.push('Add new role (if not listed above)')
+      //queries MySql for the id that the user input
+      await connection.query('SELECT * FROM employee WHERE id = ?', answer.id, async (err,results) => {
+        if (err) throw err;
+        //if there are results, continues to execute code
+        if(results.length > 0){
+          //displays employee data to user 
+          await results.forEach((ee)=> {
+            if (ee.id === parseInt(answer.id)){
+              employee = ee;
+              console.table([employee])
+            }
+          });
+          //asks user to confirm if they selected the correct employee
           await inquirer.prompt([
             {
-            name: 'role', 
-            type: 'list',
-            message: 'Choose the employee\'s new role',
-            choices: roles
-        },
-        ])
-        .then(async(answer) => {
-          await connection.query('SELECT id FROM role WHERE title = ?',
-            [answer.role],
-           async (err,res)=> {
-            if(err) throw err
-            roleId = parseInt(res[0].id);
-          await connection.query(
-            'UPDATE employee SET ? WHERE ?',
-            [
-              {
-                role_id: roleId
+            name:'correct',
+            type: 'confirm',
+            message: 'Is this the employee you want to update?'
+          }
+          ])
+          .then((answer) => {
+            //if the user confirms they selected the correct employee, continues function
+            if(answer.correct){
+              //queries MySql for the titles of all roles and uses these as choices for the user
+              //if larger db, will need to add additional prompt to for department so only pull up roles for one department
+              connection.query('SELECT title FROM role', async (err,res)=> {
+                if(err) throw err;
+                let roles = []
+                await res.forEach((item) => {
+                  roles.push(item.title)
+                })
+                //prompts user for new role, using query above to generate choices
+                await inquirer.prompt([
+                  {
+                  name: 'role', 
+                  type: 'list',
+                  message: 'Choose the employee\'s new role',
+                  choices: roles
+                  //FEATURE TO ADD:
+                  // await roles.push('Add new role (if not listed above)')
               },
-              {
-                id: employee.id
-              }
-            ],
-            (err,res)=> {
-              if(err)throw err;
-              console.log(`${res.affectedRows} employees updated!`);
-              start();
+              ])
+              .then(async(answer) => {
+                //gets the id for the role selected
+                await connection.query('SELECT id FROM role WHERE title = ?',
+                  [answer.role],
+                 async (err,res)=> {
+                  if(err) throw err
+                  roleId = parseInt(res[0].id);
+                //updates the employees role in the db
+                await connection.query(
+                  'UPDATE employee SET ? WHERE ?',
+                  [
+                    {
+                      role_id: roleId
+                    },
+                    {
+                      id: employee.id
+                    }
+                  ],
+                  (err,res)=> {
+                    if(err)throw err;
+                    console.log(`${res.affectedRows} employees updated!`);
+                    start();
+                  }
+                )
+                  
+                });
+      
+              })
+              
+              })
             }
-          )
-            
-          });
-
-        })
+            else{
+              //if the user confirms (N) when prompted if it's the right employee, restarts the id prompt
+              update();
+            }
+          })
+          //if no results, tells user that their input doesn't match and runs the id prompt again
+        }else{
+          console.log(chalk.magenta("That id does not match an employee in the database"))
+          update();
+        }
         
-        })
-      }
-      else{
-        update();
-      }
+      })
+
     })
-  })
-  
-    
 };
 
 const getManagers = async () => {
@@ -266,6 +294,3 @@ connection.connect((err) => {
     // run the start function after the connection is made to prompt the user
     start();
   });
-
-//NEED TO ADD CONNECTION.END()!!!
-//add function with inquirer prompt to go back to start or exit
