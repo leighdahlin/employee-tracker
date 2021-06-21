@@ -19,7 +19,7 @@ To use the employee tracker, you must install Node.js, MySQL and the mysql, inqu
 
 ## Usage
 View the video below for usage:
-![gif of Employee Tracker]()
+![gif of Employee Tracker](./gif/employee-tracker.gif)
 
 ## Features
 
